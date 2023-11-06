@@ -1,6 +1,7 @@
 version: '3'
 services:
   prometheus:
+    container_name: obs_prometheus
     image: prom/prometheus:v2.46.0
     ports:
       - 9090:9090
@@ -12,6 +13,7 @@ services:
     command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
 
   cadvisor:
+    container_name: obs_cadvisor
     image: gcr.io/cadvisor/cadvisor
     hostname: '{{.Node.ID}}'
     volumes:
@@ -28,6 +30,7 @@ services:
       - 8080:8080
 
   grafana:
+    container_name: obs_grafana
     image: grafana/grafana:10.0.0
     ports:
       - 3000:3000
@@ -38,14 +41,8 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
 
-  apipython:
-    image: flaskapp:1.0
-    ports:
-      - 5000:5000
-    networks:
-      - backend
-
   alertmanager:
+    container_name: obs_alertmanager
     image: prom/alertmanager:v0.25.0
     networks:
       - backend
@@ -55,11 +52,19 @@ services:
       - ./alertmanager:/etc/alertmanager
       - alertmanager-data:/data
     command: --config.file=/etc/alertmanager/alertmanager.yml
-
-  nginx:
-    image: nginx
+  
+  apipython:
+    container_name: obs_apipython
+    image: flaskapp:1.0
     ports:
-        - 80:80
+      - 5000:5000
+    networks:
+      - backend
+    #logging:
+    #  driver: gelf
+    #  options:
+    #    gelf-address: "tcp://IP_GRAYLOG:12201"
+    #    tag: flaskrestapi
 
 volumes:
   prometheus-data:
